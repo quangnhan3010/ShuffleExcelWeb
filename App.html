@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Shuffle Excel</title>
+</head>
+<body>
+  <h2>Shuffle ItemID in File Excel</h2>
+  <input type="file" id="fileInput" />
+  <br><br>
+  <button onclick="shuffleExcel()">Mix</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <script>
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function shuffleExcel() {
+      const file = document.getElementById("fileInput").files[0];
+      if (!file) {
+        alert("Chọn file Excel trước!");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        let rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        const header = rows[0];
+        const body = rows.slice(1);
+
+        shuffleArray(body);
+
+        const newData = [header, ...body];
+        const newSheet = XLSX.utils.aoa_to_sheet(newData);
+        const newBook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(newBook, newSheet, "Sheet1");
+
+        XLSX.writeFile(newBook, "shuffled.xlsx");
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  </script>
+</body>
+</html>
